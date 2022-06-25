@@ -10,6 +10,7 @@ import ru.nsu.gorin.lab5.chat.connection.MessageType;
 import ru.nsu.gorin.lab5.chat.model.ModelClient;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 
 /**
@@ -18,7 +19,6 @@ import java.net.Socket;
 public class ClientUsingJson extends AbstractClient {
     private static final Logger logger = LogManager.getLogger(ClientUsingJson.class);
 
-    private static final String ADDRESS = "localhost";
     private static final int MAX_MESSAGE_LENGTH_ON_ONE_LINE = 65;
 
     private Connection connection;
@@ -57,9 +57,10 @@ public class ClientUsingJson extends AbstractClient {
         if (!isConnect) {
             while (true) {
                 try {
+                    InetAddress address = InetAddress.getByName(gui.getAddressServerFromOptionPane());
                     int port = gui.getPortServerFromOptionPane();
 
-                    Socket socket = new Socket(ADDRESS, port);
+                    Socket socket = new Socket(address, port);
                     connection = new Connection(socket);
                     isConnect = true;
                     gui.addMessage("You connected to the server\n");

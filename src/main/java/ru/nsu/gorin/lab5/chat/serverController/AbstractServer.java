@@ -2,6 +2,8 @@ package ru.nsu.gorin.lab5.chat.serverController;
 
 import ru.nsu.gorin.lab5.chat.connection.Message;
 
+import java.net.InetAddress;
+
 /**
  * Абстрактный класс сервера. От него наследуются SimpleServer и ServerUsingJson
  * @see SimpleServer

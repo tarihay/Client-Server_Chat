@@ -8,6 +8,7 @@ import ru.nsu.gorin.lab5.chat.connection.MessageType;
 import ru.nsu.gorin.lab5.chat.model.ModelServer;
 import ru.nsu.gorin.lab5.chat.serverView.ViewGuiServer;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import java.util.Set;
  */
 public class SimpleServer extends AbstractServer {
     private static final Logger logger = LogManager.getLogger(SimpleServer.class);
+
 
     private ServerSocket serverSocket;
     private ViewGuiServer gui;

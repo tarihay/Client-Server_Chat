@@ -9,11 +9,10 @@ import ru.nsu.gorin.lab5.chat.connection.MessageType;
 import ru.nsu.gorin.lab5.chat.model.ModelServer;
 import ru.nsu.gorin.lab5.chat.serverView.ViewGuiServer;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Класс сервера, который использует Json
@@ -21,10 +20,15 @@ import java.util.Set;
 public class ServerUsingJson extends AbstractServer {
     private static final Logger logger = LogManager.getLogger(SimpleServer.class);
 
+    private static final int MAX_NUM_OF_SAVED_MESSAGES = 7;
+
     private ServerSocket serverSocket;
     private ViewGuiServer gui;
     private ModelServer model;
     private volatile boolean isServerStart = false;
+
+    private String lastMessages[] = new String[MAX_NUM_OF_SAVED_MESSAGES];
+    private int numOfSavedMessages = 0;
 
     /**
      * Метод запускает работу сервера
@@ -55,6 +59,7 @@ public class ServerUsingJson extends AbstractServer {
             isServerStart = true;
             gui.refreshDialogWindowServer("Server started.\n");
         } catch (Exception e) {
+            e.printStackTrace();
             gui.refreshDialogWindowServer("Server couldn't start for some reason.\n");
         }
     }
@@ -147,7 +152,8 @@ public class ServerUsingJson extends AbstractServer {
                     Message responseMessage = gson.fromJson(jsonObject, Message.class);
                     String userName = responseMessage.getTextMessage();
 
-                    if (responseMessage.getTypeMessage() == MessageType.USER_NAME && userName != null && !userName.isEmpty() && !model.getAllUsers().containsKey(userName)) {
+                    if (responseMessage.getTypeMessage() == MessageType.USER_NAME && userName != null
+                            && !userName.isEmpty() && !model.getAllUsers().containsKey(userName)) {
                         model.addUser(userName, connection);
                         Set<String> listUsers = new HashSet<>();
                         for (Map.Entry<String, Connection> users : model.getAllUsers().entrySet()) {
@@ -158,12 +164,22 @@ public class ServerUsingJson extends AbstractServer {
                         jsonObject = gson.toJson(nameAccepted);
                         connection.send(jsonObject);
 
+                        if (numOfSavedMessages > 0) {
+                            for (int i = 0; i < numOfSavedMessages; i++) {
+                                connection.send(lastMessages[i]);
+                            }
+                        }
+                        System.out.println("1");
+
                         sendMessageAllUsers(new Message(MessageType.USER_ADDED, userName));
+
                         return userName;
                     }
                     else {
                         connection.send(new Message(MessageType.NAME_USED));
                     }
+
+
                 } catch (Exception e) {
                     logger.error(e);
                     gui.refreshDialogWindowServer("Error with adding new client occurred\n");
@@ -185,9 +201,20 @@ public class ServerUsingJson extends AbstractServer {
                     String jsonObject = connection.receiveJson();
                     Message message = gson.fromJson(jsonObject, Message.class);
 
+                    String textMessage = null;
                     if (message.getTypeMessage() == MessageType.TEXT_MESSAGE) {
-                        String textMessage = String.format("%s:\n %s\n\n", userName, message.getTextMessage());
+                        textMessage = String.format("%s:\n %s\n\n", userName, message.getTextMessage());
                         sendMessageAllUsers(new Message(MessageType.TEXT_MESSAGE, textMessage));
+                    }
+
+                    Message messageToSave = new Message(MessageType.TEXT_MESSAGE, textMessage);
+                    String jsonToSave = gson.toJson(messageToSave);
+                    if (numOfSavedMessages < MAX_NUM_OF_SAVED_MESSAGES) {
+                        lastMessages[numOfSavedMessages] = jsonToSave;
+                        numOfSavedMessages++;
+                    }
+                    else {
+                        appendMessageWithMovingBuffer(jsonToSave);
                     }
 
 
@@ -204,6 +231,13 @@ public class ServerUsingJson extends AbstractServer {
                     break;
                 }
             }
+        }
+
+        private void appendMessageWithMovingBuffer(String jsonObject) {
+            for (int i = 0; i < MAX_NUM_OF_SAVED_MESSAGES - 1; i++) {
+                lastMessages[i] = lastMessages[i+1];
+            }
+            lastMessages[MAX_NUM_OF_SAVED_MESSAGES-1] = jsonObject;
         }
 
         @Override

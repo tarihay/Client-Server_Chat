@@ -146,6 +146,29 @@ public class ViewGuiClient {
         }
     }
 
+    /**
+     * Метод вызывает окно для ввода адреса сервера
+     * @return возвращает порт
+     */
+    public String getAddressServerFromOptionPane() {
+        while (true) {
+            String address = JOptionPane.showInputDialog(
+                    frame, "Type server's address",
+                    "Server address",
+                    JOptionPane.QUESTION_MESSAGE
+            );
+            try {
+                return address;
+            } catch (Exception e) {
+                logger.error(e);
+                JOptionPane.showMessageDialog(
+                        frame, "Error with typing address occurred",
+                        "Wrong address typed", JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
 
     /**
      * Метод вызывает окно для ввода имени пользователя
@@ -168,16 +191,5 @@ public class ViewGuiClient {
                 frame, text,
                 "ERROR", JOptionPane.ERROR_MESSAGE
         );
-    }
-
-    public String getServerAddressFromOptionPane() {
-        while (true) {
-            String addressServer = JOptionPane.showInputDialog(
-                    frame, "Введите адрес сервера:",
-                    "Ввод адреса сервера",
-                    JOptionPane.QUESTION_MESSAGE
-            );
-            return addressServer.trim();
-        }
     }
 }
